@@ -1,20 +1,24 @@
-Very unfinished chat program, but it is technically usable in its current state  
+## Features
+- Voice chat with lossless audio
+- Encrypted peer-to-peer communication (the server is used for peer discovery only)
+- Fully configurable audio parameters (channels, bitdepth, samplerate)
+- Global hotkeys that can be configured for mic toggle, push to talk, push to mute etc
+- Optional postprocessing effects such as changing volume of other users and a basic noisegate
+- Basic text chat
+- Supports multiple users per channel, channel is determined by the server and key used
+- Can recover from some packet drops
+- Minimalist software, no third party libraries, uses windows' native built in APIs directly
+- The whole application is 23 KB
   
-Features:  
--voice chat with lossless audio  
--fully configurable audio parameters (channels, bitdepth, samplerate)  
--global hotkeys that can be configured for mic toggle, push to talk, push to mute etc  
--optional postprocessing effects such as changing volume of other users and a basic noisegate  
--basic text chat  
--supports multiple users per chatroom, chatroom is determined by the key used  
--all important data is sent peer to peer and end-to-end encrypted with aes256, the server is used for peer discovery only  
--can recover from some packet drops  
--minimalist software, no third party libraries, uses windows' native built in APIs directly  
-  
-![screenshot1](https://cdn.discordapp.com/attachments/852088618594992159/852091479790190603/unknown.png)  
-  
-To build the application using the included build.bat you need to have Visual Studio installed.  
-First open build.bat in a text editor and make sure the vcvarsall path inside is correct.  
-Then simply run build.bat by double clicking on it.  
-  
-The server can be built on linux aswell, simply "cc server.c"  
+![image](https://user-images.githubusercontent.com/45233053/170481636-2943db7b-9253-496c-8fe2-19f03151b069.png)
+
+### Setup
+- Download the application from [Releases](https://github.com/catsethecat/meow/releases) or build it from source code
+- Run it and use the /cfg command to open the configuration file in a text editor.
+- Edit the Channels section, you can add multiple channels, one per line, in this format:  
+  ```ChannelName = ServerAddress:ServerPort:EncryptionKey```  
+  EncryptionKey should be set to 32 random bytes in hexadecimal format (64 characters A-F 0-9)
+- Set DefaultChannel to the name of the channel which you want to use when starting the application
+- Restart the application
+- You should now be able to communicate with other users who are using the same channel (same server and key)
+
