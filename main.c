@@ -59,6 +59,7 @@ struct meow_config {
 	unsigned int    holdKey;
 	char            nickname[16];
 	unsigned char   key[32];
+    unsigned char   id[8];
 	char            address[32];
 	char            port[8];
 	unsigned int    targetDelay;
@@ -564,7 +565,7 @@ void WinMainCRTStartup() {
 		"DefaultChannel = None\n"
 		"\n"
 		"[Channels]\n"
-		"ExampleName = catse.net:64771:0000000000000000000000000000000000000000000000000000000000000000\n"
+		"ExampleName = catse.net:64771:0000000000000000:0000000000000000000000000000000000000000000000000000000000000000\n"
 		};
 		DWORD numWritten;
 		WriteFile(hFile, defaultConfig, (DWORD)strlen(defaultConfig), &numWritten, NULL);
@@ -588,18 +589,28 @@ void WinMainCRTStartup() {
 	memcpy(cfg.nickname, nickname, min(sizeof(cfg.nickname)-1, strlen(nickname)));
 	char* channel = iniGetValue(&config, "Channels", iniGetValue(&config, "General", "DefaultChannel"));
     if (channel) {
-        char* tmp = strchr(channel, ':');
-        memcpy(cfg.address, channel, min(sizeof(cfg.address) - 1, tmp-channel));
-        channel = tmp + 1;
-        tmp = strchr(channel, ':');
-        memcpy(cfg.port, channel, min(sizeof(cfg.port) - 1, tmp - channel));
-        channel = tmp + 1;
-        char hex[3] = { 0 };
-        for (int i = 0; i < 32; i++) {
-            hex[0] = channel[0];
-            hex[1] = channel[1];
-            cfg.key[i] = str_gethex(hex, 0);
-            channel += 2;
+        char* chAddr = channel, *chPort = strchr(channel, ':')+1, *chId = 0, *chKey = 0;
+        if(chPort > (char*)1)
+            chId = strchr(chPort, ':') + 1;
+        if(chId > (char*)1)
+            chKey = strchr(chId, ':')+1;
+        if (chKey > (char*)1 && (chKey-chId-1) == 16) {
+            memcpy(cfg.address, chAddr, min(sizeof(cfg.address) - 1, chPort - chAddr - 1));
+            memcpy(cfg.port, chPort, min(sizeof(cfg.port) - 1, chId - chPort - 1));
+            char hex[3] = { 0 };
+            for (int i = 0; i < 8; i++) {
+                hex[0] = chId[i*2+0];
+                hex[1] = chId[i*2+1];
+                cfg.id[i] = str_gethex(hex, 0);
+            }
+            for (int i = 0; i < 32; i++) {
+                hex[0] = chKey[i*2+0];
+                hex[1] = chKey[i*2+1];
+                cfg.key[i] = str_gethex(hex, 0);
+            }
+        }
+        else {
+            ui_add_message("Error: bad cfg channel format", 0, 0, 0, 0, 200, 0, 0);
         }
     }
 
@@ -636,6 +647,8 @@ void WinMainCRTStartup() {
     SOCKADDR_IN peerAddr;
     peerAddr.sin_family = AF_INET;
     int timeoutCount = 1;
+    char pingMsg[12] = "meow";
+    memcpy(pingMsg + 4, cfg.id, 8);
     while (1) {
         if (serverSocket == INVALID_SOCKET) { //create a new socket for connecting to server if the socket was assigned to a peer
             serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -644,7 +657,7 @@ void WinMainCRTStartup() {
             if (setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&optval, sizeof(optval)) != 0) break;
             if (connect(serverSocket, serverAddr->ai_addr, (int)serverAddr->ai_addrlen) != 0) break;
         }
-        if (recvLen == SOCKET_ERROR && send(serverSocket, "meow", 4, 0) == SOCKET_ERROR) break; //ping sv on first run and on receive timeouts
+        if (recvLen == SOCKET_ERROR && send(serverSocket, pingMsg, sizeof(pingMsg), 0) == SOCKET_ERROR) break; //ping sv on first run and on receive timeouts
         recvLen = recv(serverSocket, recvBuf, 65536, 0);
         if (timeoutCount > 1 && recvLen != SOCKET_ERROR)
             ui_add_message("Peer discovery server online", 0, 0, 0, 0, 100, 100, 100);

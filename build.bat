@@ -10,4 +10,10 @@ rc -nologo /fo res.res res.rc
 cl %CompilerFlags% main.c /link %LinkerFlags% /out:Meow.exe
 del main.obj
 del res.res
+
+set CompilerFlags= -MT -nologo -O2 -W3
+set LinkerFlags= -INCREMENTAL:NO -opt:ref Ws2_32.lib
+cl %CompilerFlags% server.c /link %LinkerFlags% /out:meow_server.exe
+del server.obj
+
 pause
