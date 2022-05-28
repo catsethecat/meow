@@ -1,7 +1,7 @@
 ## Features
 - Voice chat with lossless audio
 - Encrypted peer-to-peer communication (the server is used for peer discovery only)
-- Fully configurable audio parameters (channels, bitdepth, samplerate)
+- Fully configurable audio parameters (mono/stereo, bitdepth, samplerate)
 - Global hotkeys that can be configured for mic toggle, push to talk, push to mute etc
 - Basic noisegate feature
 - Basic text chat
