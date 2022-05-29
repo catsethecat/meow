@@ -540,6 +540,9 @@ void WinMainCRTStartup() {
 	for (int i = 0; i < MAX_PEERS; i++)
 		peers[i].socket = INVALID_SOCKET;
 
+    if (FindWindowA("Meow", NULL) != NULL)
+        fatalError("Already running");
+
 	ui_init(Callback_SendChatMessage);
 	ui_add_message("Meow! Type /help for a list of commands", 0, 0, 0, 0, 100, 100, 100);
 
@@ -647,8 +650,6 @@ void WinMainCRTStartup() {
     SOCKADDR_IN peerAddr;
     peerAddr.sin_family = AF_INET;
     int timeoutCount = 1;
-    char pingMsg[12] = "meow";
-    memcpy(pingMsg + 4, cfg.id, 8);
     while (1) {
         if (serverSocket == INVALID_SOCKET) { //create a new socket for connecting to server if the socket was assigned to a peer
             serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -657,7 +658,7 @@ void WinMainCRTStartup() {
             if (setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&optval, sizeof(optval)) != 0) break;
             if (connect(serverSocket, serverAddr->ai_addr, (int)serverAddr->ai_addrlen) != 0) break;
         }
-        if (recvLen == SOCKET_ERROR && send(serverSocket, pingMsg, sizeof(pingMsg), 0) == SOCKET_ERROR) break; //ping sv on first run and on receive timeouts
+        if (recvLen == SOCKET_ERROR && send(serverSocket, cfg.id, sizeof(cfg.id), 0) == SOCKET_ERROR) break; //ping sv on first run and on receive timeouts
         recvLen = recv(serverSocket, recvBuf, 65536, 0);
         if (timeoutCount > 1 && recvLen != SOCKET_ERROR)
             ui_add_message("Peer discovery server online", 0, 0, 0, 0, 100, 100, 100);

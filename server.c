@@ -75,8 +75,7 @@ int main(int argc, char** argv) {
     while (1) {
         //receive data
         int recvLen = recvfrom(serverSocket, (char*)recvBuf, 65536, 0, (struct sockaddr*) & fromAddr, &addrLen);
-        if (recvLen != 12) continue;
-        if (*(int*)recvBuf != *(int*)"meow") continue;
+        if (recvLen != 8) continue;
         //clear offline peers
         time_t curTime = time(NULL);
         for (unsigned int i = 0; i < sv_peerCount; i++) {
@@ -104,7 +103,7 @@ int main(int argc, char** argv) {
             if (sv_peerCount == maxPeers) continue;
             sv_peers[senderIndex].ip = fromAddr.sin_addr.s_addr;
             sv_peers[senderIndex].connectedCount = 0;
-            sv_peers[senderIndex].id = *(uint64_t*)(recvBuf + 4);
+            sv_peers[senderIndex].id = *(uint64_t*)(recvBuf);
             sv_peerCount++;
         }
         sv_peers[senderIndex].port = fromAddr.sin_port;
