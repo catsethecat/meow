@@ -1,7 +1,9 @@
 typedef VOID(*TEXTENTERFUNC)(char* msg, int len);
+typedef VOID(*UICLOSEDFUNC)();
 
 HWND window, messages, users, textEntry;
 TEXTENTERFUNC _textEnterFunc;
+UICLOSEDFUNC _uiClosedFunc;
 int uiReady;
 char uidLines[8];
 
@@ -143,12 +145,13 @@ void ui_thread() {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
+	_uiClosedFunc();
 	ExitProcess(0);
 }
 
-void ui_init(TEXTENTERFUNC textEnteredCallback) {
+void ui_init(TEXTENTERFUNC textEnteredCallback, UICLOSEDFUNC uiClosedCallback) {
 	_textEnterFunc = textEnteredCallback;
+	_uiClosedFunc = uiClosedCallback;
 	for (int i = 0; i < sizeof(uidLines); i++)
 		uidLines[i] = -1;
 	CreateThread(0, 0, (LPTHREAD_START_ROUTINE)ui_thread, NULL, 0, NULL);

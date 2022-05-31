@@ -75,11 +75,11 @@ int main(int argc, char** argv) {
     while (1) {
         //receive data
         int recvLen = recvfrom(serverSocket, (char*)recvBuf, 65536, 0, (struct sockaddr*) & fromAddr, &addrLen);
-        if (recvLen != 8) continue;
+        if (recvLen != 8 && recvLen != 1) continue;
         //clear offline peers
         time_t curTime = time(NULL);
         for (unsigned int i = 0; i < sv_peerCount; i++) {
-            if (curTime > sv_peers[i].timestamp + 3) {
+            if (curTime > sv_peers[i].timestamp + 3 || (sv_peers[i].ip == fromAddr.sin_addr.s_addr && recvLen == 1)) {
                 //remove from connected lists
                 for (unsigned int j = 0; j < sv_peerCount; j++) {
                     for (unsigned int k = 0; k < sv_peers[j].connectedCount; k++) {
@@ -96,6 +96,8 @@ int main(int argc, char** argv) {
                 i--;
             }
         }
+        if (recvLen == 1)
+            continue;
         //update / create peer info
         unsigned int senderIndex = 0;
         for (; senderIndex < sv_peerCount && sv_peers[senderIndex].ip != fromAddr.sin_addr.s_addr; senderIndex++);

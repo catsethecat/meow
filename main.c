@@ -40,6 +40,7 @@ void fatalError(char* msg) {
 #define PACKET_TYPE_AUDIO   2
 #define PACKET_TYPE_RESEND  3
 #define PACKET_TYPE_KEEPALIVE 4
+#define PACKET_TYPE_EXIT    5
 
 struct peer {
 	char            nickname[16];
@@ -75,7 +76,19 @@ unsigned int    sentPacketIndex = 0;
 unsigned int    sentPacketSeqNum = 0;
 int             debug_droptest = 0;
 char			configPath[MAX_PATH];
+SOCKET          serverSocket = INVALID_SOCKET;
 
+void Callback_UiClosed() {
+    if (serverSocket != INVALID_SOCKET)
+        send(serverSocket, "\0", 1, 0);
+    unsigned char tmp[16];
+    tmp[0] = PACKET_TYPE_EXIT;
+    *((unsigned int*)(tmp + 1)) = sentPacketSeqNum;
+    AES_256_CBC_encrypt(tmp, 16, initVec, keyScheduleEnc);
+    for (int i = 0; i < MAX_PEERS; i++)
+        if (peers[i].socket != INVALID_SOCKET)
+            send(peers[i].socket, (char*)tmp, 16, 0);
+}
 
 void Callback_SendChatMessage(char* msg, int msgLen) {
 	//process commands
@@ -518,6 +531,10 @@ void PeerThread(LPVOID lParam) {
                 unsigned int requestedPacketIndex = (sentPacketIndex + MAX_DROPPED_PACKETS - snDiff) % MAX_DROPPED_PACKETS;
                 send(pPeer->socket, (char*)(sentPackets + requestedPacketIndex * 65536), sentPacketLengths[requestedPacketIndex], 0);
             }
+            else if (pReceivedPacket[0] == PACKET_TYPE_EXIT) {
+                success = 0;
+                break;
+            }
             //end of packet processing
         }
 
@@ -543,7 +560,7 @@ void WinMainCRTStartup() {
     if (FindWindowA("Meow", NULL) != NULL)
         fatalError("Already running");
 
-	ui_init(Callback_SendChatMessage);
+	ui_init(Callback_SendChatMessage, Callback_UiClosed);
 	ui_add_message("Meow! Type /help for a list of commands", 0, 0, 0, 0, 100, 100, 100);
 
 	//open config or create if missing
@@ -642,7 +659,6 @@ void WinMainCRTStartup() {
         Sleep(INFINITE);
     }
     //
-    SOCKET serverSocket = INVALID_SOCKET;
     char* recvBuf = malloc(65536);
     if (recvBuf == NULL)
         fatalError("malloc fail");
@@ -691,6 +707,7 @@ void WinMainCRTStartup() {
     if (serverSocket != INVALID_SOCKET) {
         shutdown(serverSocket, SD_SEND);
         closesocket(serverSocket);
+        serverSocket = INVALID_SOCKET;
     }
     freeaddrinfo(serverAddr);
 	
