@@ -16,7 +16,7 @@
 - Run it and use the /cfg command to open the configuration file in a text editor.
 - Edit the Channels section, you can add multiple channels, one per line.   
   Format: ```ChannelName = ServerAddress:ServerPort:ChannelID:EncryptionKey```  
-  Example: ```Cats = catse.net:64771:c660c8672f6105b1:af9afecfb6e774f7c7ac9d48da63cf64b69c703c12508e34f19f96dddfc6e960```  
+  Example: ```Cats = meow.catse.net:64771:c660c8672f6105b1:af9afecfb6e774f7c7ac9d48da63cf64b69c703c12508e34f19f96dddfc6e960```  
   ChannelID should be set to 8 random bytes, EncryptionKey to 32 random bytes, both in hexadecimal format. 
   A secure method should be used to share channel information with friends who you want to use the application with.
 - Set DefaultChannel to the name of the channel which you want to use when starting the application
@@ -27,6 +27,6 @@
 - The server can be compiled on linux. example: ```gcc server.c -o meow_server```
 
 ## Notes
-- A public server is available at ```catse.net:64771``` if you don't want to host your own
+- A public server is available at ```meow.catse.net:64771``` if you don't want to host your own
 - A fast, reliable internet connection is required. The application is very sensitive to packet drops and latency. You can try mitigating audio cutouts and glitches by increasing the target delay in the config.
 - 16 bit 44100 Hz Mono (default config) audio requires a network bandwidth of 0.7 Mbps per user. There is currently no data compression.
